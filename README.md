@@ -1,23 +1,41 @@
 # Gerenciador de Tarefas
 
+<<<<<<< HEAD
 Aplicação monolítica em camadas — **Spring Boot** (back-end) + **React** (front-end).
 TP1: CRUD básico. **TP2: camada de persistência real (JPA + Spring Data) com histórico de mudanças e testes automatizados.**
+=======
+Aplicação monolítica em camadas desenvolvida com **Spring Boot** (back-end) e **React** (front-end), como entrega do TP1 da disciplina de Desenvolvimento de Software.
+
+## Funcionalidades
+
+- Criar tarefas
+- Listar tarefas
+- Marcar tarefa como concluída
+- Excluir tarefa
+>>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
 
 ## Stack
 
 | Camada | Tecnologia |
 |--------|-----------|
+<<<<<<< HEAD
 | Back-end | Spring Boot 3.2 |
 | Banco de dados (prod) | PostgreSQL 16 |
 | Banco de dados (testes) | H2 em memória |
 | Migrations | Flyway |
 | ORM | Spring Data JPA / Hibernate |
+=======
+| Back-end | Spring Boot 3.x |
+| Banco de dados | H2 (in-memory) |
+| ORM | Spring Data JPA |
+>>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
 | Front-end | React 18 + Vite |
 | Build | Maven |
 
 ## Como rodar
 
 ### Pré-requisitos
+<<<<<<< HEAD
 - Java 17+, Maven 3.8+, Node.js 18+, Docker
 
 ### 1. Subir o banco
@@ -26,18 +44,33 @@ docker compose up -d
 ```
 
 ### 2. Back-end
+=======
+- Java 17+
+- Maven 3.8+
+- Node.js 18+
+
+### Back-end
+>>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
 ```bash
 cd todo-api
 mvn spring-boot:run
 ```
+<<<<<<< HEAD
 API em `http://localhost:8080`. O Flyway aplica as migrations automaticamente na inicialização.
 
 ### 3. Front-end
+=======
+API disponível em: `http://localhost:8080`  
+Console H2: `http://localhost:8080/h2-console` *(JDBC URL: `jdbc:h2:mem:tododb` / usuário: `sa` / senha: vazio)*
+
+### Front-end
+>>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
 ```bash
 cd todo-frontend
 npm install
 npm run dev
 ```
+<<<<<<< HEAD
 Interface em `http://localhost:5173`.
 
 ### Rodar os testes
@@ -95,11 +128,15 @@ Page<Task> resultado = taskRepository.findByTituloContainingIgnoreCase("relatór
 // Histórico completo de uma task, mais recente primeiro
 List<TaskHistory> eventos = taskHistoryRepository.findByTaskIdOrderByChangedAtDesc(taskId);
 ```
+=======
+Interface disponível em: `http://localhost:5173`
+>>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
 
 ## Endpoints da API
 
 | Método | URL | Descrição |
 |--------|-----|-----------|
+<<<<<<< HEAD
 | GET | `/api/tasks?page=0&size=20` | Listar com paginação |
 | GET | `/api/tasks?completed=true` | Filtrar por status |
 | GET | `/api/tasks?titulo=texto` | Buscar por título |
@@ -123,11 +160,28 @@ Erros retornam JSON estruturado (404 para tarefa inexistente, 400 para validaç�
 
 Cobrem: paginação, filtros, geração de histórico em cada ação (criar/atualizar/concluir/deletar),
 tratamento de 404 e validação de entrada.
+=======
+| GET | `/api/tasks` | Listar todas as tarefas |
+| POST | `/api/tasks` | Criar nova tarefa |
+| PATCH | `/api/tasks/{id}/concluir` | Marcar como concluída |
+| DELETE | `/api/tasks/{id}` | Excluir tarefa |
+>>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
 
 ## Arquitetura
 
 ```
+<<<<<<< HEAD
 React (Browser) → Controller → Service → Repository → PostgreSQL
                                    ↓
                           TaskHistoryRepository (auditoria)
 ```
+=======
+React (Browser) → Controller → Service → Repository → H2
+```
+
+Segue o padrão de camadas com separação de responsabilidades:
+- **Controller** — recebe requisições HTTP
+- **Service** — regras de negócio
+- **Repository** — acesso ao banco via Spring Data JPA
+- **Model** — entidade `Task`
+>>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
