@@ -1,187 +1,306 @@
 # Gerenciador de Tarefas
 
-<<<<<<< HEAD
-Aplicação monolítica em camadas — **Spring Boot** (back-end) + **React** (front-end).
-TP1: CRUD básico. **TP2: camada de persistência real (JPA + Spring Data) com histórico de mudanças e testes automatizados.**
-=======
-Aplicação monolítica em camadas desenvolvida com **Spring Boot** (back-end) e **React** (front-end), como entrega do TP1 da disciplina de Desenvolvimento de Software.
+Aplicação full stack desenvolvida em arquitetura monolítica em camadas utilizando **Spring Boot** no back-end e **React + Vite** no front-end.
+
+O projeto implementa um CRUD completo de tarefas, incluindo persistência com PostgreSQL, histórico de alterações (auditoria), migrações de banco com Flyway e testes automatizados.
 
 ## Funcionalidades
 
-- Criar tarefas
-- Listar tarefas
-- Marcar tarefa como concluída
-- Excluir tarefa
->>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
+* Criar tarefas
+* Listar tarefas com paginação
+* Filtrar por status (pendentes/concluídas)
+* Buscar tarefas por título
+* Atualizar tarefas
+* Marcar tarefas como concluídas
+* Excluir tarefas
+* Consultar histórico completo de alterações de cada tarefa
 
-## Stack
+---
 
-| Camada | Tecnologia |
-|--------|-----------|
-<<<<<<< HEAD
-| Back-end | Spring Boot 3.2 |
-| Banco de dados (prod) | PostgreSQL 16 |
-| Banco de dados (testes) | H2 em memória |
-| Migrations | Flyway |
-| ORM | Spring Data JPA / Hibernate |
-=======
-| Back-end | Spring Boot 3.x |
-| Banco de dados | H2 (in-memory) |
-| ORM | Spring Data JPA |
->>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
-| Front-end | React 18 + Vite |
-| Build | Maven |
+# Tecnologias
 
-## Como rodar
+| Camada            | Tecnologia                  |
+| ----------------- | --------------------------- |
+| Back-end          | Spring Boot 3.2             |
+| Linguagem         | Java 17                     |
+| Banco de produção | PostgreSQL 16               |
+| Banco de testes   | H2 (em memória)             |
+| Persistência      | Spring Data JPA + Hibernate |
+| Migrações         | Flyway                      |
+| Front-end         | React 18 + Vite             |
+| Build             | Maven                       |
+| Containers        | Docker + Docker Compose     |
 
-### Pré-requisitos
-<<<<<<< HEAD
-- Java 17+, Maven 3.8+, Node.js 18+, Docker
+---
 
-### 1. Subir o banco
+# Estrutura do Projeto
+
+```
+todo-api/
+├── src
+├── pom.xml
+
+todo-frontend/
+├── src
+├── package.json
+
+docker-compose.yml
+README.md
+```
+
+---
+
+# Como executar
+
+## Pré-requisitos
+
+* Java 17+
+* Maven 3.8+
+* Node.js 18+
+* Docker
+
+---
+
+## 1. Iniciar o banco de dados
+
 ```bash
 docker compose up -d
 ```
 
-### 2. Back-end
-=======
-- Java 17+
-- Maven 3.8+
-- Node.js 18+
+---
 
-### Back-end
->>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
+## 2. Executar o Back-end
+
 ```bash
 cd todo-api
 mvn spring-boot:run
 ```
-<<<<<<< HEAD
-API em `http://localhost:8080`. O Flyway aplica as migrations automaticamente na inicialização.
 
-### 3. Front-end
-=======
-API disponível em: `http://localhost:8080`  
-Console H2: `http://localhost:8080/h2-console` *(JDBC URL: `jdbc:h2:mem:tododb` / usuário: `sa` / senha: vazio)*
+API disponível em:
 
-### Front-end
->>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
+```
+http://localhost:8080
+```
+
+As migrations do Flyway são executadas automaticamente durante a inicialização da aplicação.
+
+---
+
+## 3. Executar o Front-end
+
 ```bash
 cd todo-frontend
 npm install
 npm run dev
 ```
-<<<<<<< HEAD
-Interface em `http://localhost:5173`.
 
-### Rodar os testes
+Interface disponível em:
+
+```
+http://localhost:5173
+```
+
+---
+
+# Executando os testes
+
 ```bash
 cd todo-api
 mvn test
 ```
-Os testes usam H2 em memória (`src/test/resources/application.properties`) — não tocam no Postgres.
 
-## Modelagem de dados
+Os testes utilizam um banco **H2 em memória**, garantindo isolamento e evitando alterações no banco PostgreSQL.
+
+---
+
+# Modelagem do Banco
 
 ```
-tasks                          task_history
-├── id (PK)                    ├── id (PK)
-├── titulo                     ├── task_id        (sem FK — ver nota abaixo)
-├── descricao                  ├── action          (CREATED/UPDATED/COMPLETED/DELETED)
-├── completed                  ├── titulo_snapshot
-├── created_at                 ├── descricao_snapshot
-└── updated_at                 ├── completed_snapshot
-                                └── changed_at
+tasks
+├── id (PK)
+├── titulo
+├── descricao
+├── completed
+├── created_at
+└── updated_at
+
+task_history
+├── id (PK)
+├── task_id
+├── action
+├── titulo_snapshot
+├── descricao_snapshot
+├── completed_snapshot
+└── changed_at
 ```
 
-**Por que `task_history.task_id` não é uma foreign key física:** o histórico existe justamente
-para sobreviver à exclusão da task original — é o registro de auditoria de que ela existiu e do
-que aconteceu com ela. Se fosse FK com `ON DELETE CASCADE`, o histórico morreria junto com a task,
-o que anula o propósito da funcionalidade. Se fosse FK sem cascade, a query de `DELETE` quebraria.
-Por isso o relacionamento é lógico (aplicação), não imposto pelo schema.
+---
 
-**Por que histórico como tabela própria e não Hibernate Envers:** Envers automatiza a auditoria,
-mas esconde o "como" — difícil de customizar quando você precisa, por exemplo, cruzar eventos de
-histórico com métricas de negócio (tempo médio até conclusão, taxa de reabertura de tarefas). Uma
-tabela explícita com snapshot dá controle total sobre o que é gravado e como é consultado, e
-evolui naturalmente para relatórios de auditoria.
+# Decisões de Projeto
 
-## Camada de persistência
+## Por que `task_history.task_id` não possui Foreign Key?
 
-### `Task` (entidade principal)
-Mapeada com JPA (`@Entity`, `@Table`), validação Bean Validation (`@NotBlank`, `@Size`) e
-auditoria automática de `createdAt`/`updatedAt` via `@CreatedDate`/`@LastModifiedDate` +
-`@EnableJpaAuditing`.
+O objetivo da tabela de histórico é preservar todos os eventos da tarefa, inclusive após sua exclusão.
 
-### `TaskHistory` (auditoria)
-Snapshot imutável do estado da task em cada evento relevante. Gravado explicitamente no
-`TaskService`, não via listener de entidade — mantém a lógica testável e visível, sem "mágica"
-escondida em callbacks de ciclo de vida do JPA.
+Caso existisse uma FK com **ON DELETE CASCADE**, o histórico seria removido junto com a tarefa.
 
-### Repositórios (Spring Data)
+Caso existisse uma FK sem cascade, a exclusão da tarefa seria impedida.
+
+Por esse motivo, o relacionamento é tratado pela aplicação e não pelo banco de dados.
+
+---
+
+## Por que uma tabela própria de histórico?
+
+Embora o Hibernate Envers automatize auditoria, foi escolhida uma implementação manual por oferecer maior controle sobre os dados armazenados.
+
+Isso facilita futuras evoluções, como:
+
+* cálculo do tempo médio até conclusão;
+* métricas de produtividade;
+* taxa de reabertura de tarefas;
+* geração de relatórios de auditoria.
+
+Cada evento registra um snapshot completo da tarefa no momento da alteração.
+
+---
+
+# Camada de Persistência
+
+## Task
+
+Entidade principal da aplicação.
+
+Utiliza:
+
+* `@Entity`
+* `@Table`
+* Bean Validation (`@NotBlank`, `@Size`)
+* Auditoria automática com:
+
+```
+@CreatedDate
+@LastModifiedDate
+@EnableJpaAuditing
+```
+
+---
+
+## TaskHistory
+
+Representa um snapshot imutável do estado da tarefa.
+
+Os registros são criados explicitamente na camada de serviço (`TaskService`), tornando a lógica de auditoria transparente, previsível e facilmente testável.
+
+---
+
+# Repositórios
+
+Exemplos de consultas utilizando Spring Data JPA.
+
+### Paginação
+
 ```java
-// Paginação + filtro por status
-Page<Task> tarefasPendentes = taskRepository.findByCompleted(false, PageRequest.of(0, 20));
-
-// Busca por título, case-insensitive
-Page<Task> resultado = taskRepository.findByTituloContainingIgnoreCase("relatório", pageable);
-
-// Histórico completo de uma task, mais recente primeiro
-List<TaskHistory> eventos = taskHistoryRepository.findByTaskIdOrderByChangedAtDesc(taskId);
-```
-=======
-Interface disponível em: `http://localhost:5173`
->>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
-
-## Endpoints da API
-
-| Método | URL | Descrição |
-|--------|-----|-----------|
-<<<<<<< HEAD
-| GET | `/api/tasks?page=0&size=20` | Listar com paginação |
-| GET | `/api/tasks?completed=true` | Filtrar por status |
-| GET | `/api/tasks?titulo=texto` | Buscar por título |
-| GET | `/api/tasks/{id}` | Buscar uma tarefa |
-| POST | `/api/tasks` | Criar tarefa |
-| PUT | `/api/tasks/{id}` | Atualizar tarefa |
-| PATCH | `/api/tasks/{id}/concluir` | Marcar como concluída |
-| DELETE | `/api/tasks/{id}` | Excluir tarefa |
-| GET | `/api/tasks/{id}/historico` | Histórico de eventos da tarefa |
-
-Erros retornam JSON estruturado (404 para tarefa inexistente, 400 para validação falha) via
-`@RestControllerAdvice`, em vez de 500 genérico.
-
-## Testes automatizados
-
-| Camada | Tipo de teste | Ferramenta |
-|--------|---------------|-----------|
-| `TaskRepository` | Integração com banco real (H2) | `@DataJpaTest` |
-| `TaskService` | Unitário, com mocks | JUnit 5 + Mockito |
-| `TaskController` | Integração HTTP simulada | `@WebMvcTest` + MockMvc |
-
-Cobrem: paginação, filtros, geração de histórico em cada ação (criar/atualizar/concluir/deletar),
-tratamento de 404 e validação de entrada.
-=======
-| GET | `/api/tasks` | Listar todas as tarefas |
-| POST | `/api/tasks` | Criar nova tarefa |
-| PATCH | `/api/tasks/{id}/concluir` | Marcar como concluída |
-| DELETE | `/api/tasks/{id}` | Excluir tarefa |
->>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
-
-## Arquitetura
-
-```
-<<<<<<< HEAD
-React (Browser) → Controller → Service → Repository → PostgreSQL
-                                   ↓
-                          TaskHistoryRepository (auditoria)
-```
-=======
-React (Browser) → Controller → Service → Repository → H2
+Page<Task> tarefasPendentes =
+    taskRepository.findByCompleted(false, PageRequest.of(0, 20));
 ```
 
-Segue o padrão de camadas com separação de responsabilidades:
-- **Controller** — recebe requisições HTTP
-- **Service** — regras de negócio
-- **Repository** — acesso ao banco via Spring Data JPA
-- **Model** — entidade `Task`
->>>>>>> e279a9e68b1a891163ad545cda2e42337c7709e4
+### Busca por título
+
+```java
+Page<Task> resultado =
+    taskRepository.findByTituloContainingIgnoreCase("relatório", pageable);
+```
+
+### Histórico da tarefa
+
+```java
+List<TaskHistory> eventos =
+    taskHistoryRepository.findByTaskIdOrderByChangedAtDesc(taskId);
+```
+
+---
+
+# API REST
+
+| Método | Endpoint                    | Descrição            |
+| ------ | --------------------------- | -------------------- |
+| GET    | `/api/tasks`                | Listar tarefas       |
+| GET    | `/api/tasks?page=0&size=20` | Paginação            |
+| GET    | `/api/tasks?completed=true` | Filtrar por status   |
+| GET    | `/api/tasks?titulo=texto`   | Buscar por título    |
+| GET    | `/api/tasks/{id}`           | Buscar tarefa por ID |
+| POST   | `/api/tasks`                | Criar tarefa         |
+| PUT    | `/api/tasks/{id}`           | Atualizar tarefa     |
+| PATCH  | `/api/tasks/{id}/concluir`  | Concluir tarefa      |
+| DELETE | `/api/tasks/{id}`           | Excluir tarefa       |
+| GET    | `/api/tasks/{id}/historico` | Histórico da tarefa  |
+
+---
+
+# Tratamento de Erros
+
+A API utiliza `@RestControllerAdvice` para padronizar respostas de erro.
+
+Exemplos:
+
+* **400 Bad Request** → dados inválidos
+* **404 Not Found** → tarefa inexistente
+
+Todas as respostas seguem um formato JSON consistente.
+
+---
+
+# Testes
+
+| Camada     | Tipo            | Ferramenta              |
+| ---------- | --------------- | ----------------------- |
+| Repository | Integração      | `@DataJpaTest`          |
+| Service    | Unitário        | JUnit 5 + Mockito       |
+| Controller | Integração HTTP | `@WebMvcTest` + MockMvc |
+
+Os testes cobrem:
+
+* criação de tarefas;
+* atualização;
+* conclusão;
+* exclusão;
+* geração de histórico;
+* paginação;
+* filtros;
+* validações;
+* tratamento de erros.
+
+---
+
+# Arquitetura
+
+```
+React
+   │
+   ▼
+Controller
+   │
+   ▼
+Service
+   │
+   ├──────────────► TaskHistoryRepository
+   │                     │
+   ▼                     ▼
+Repository          Auditoria
+   │
+   ▼
+PostgreSQL
+```
+
+---
+
+# Possíveis Evoluções
+
+* Autenticação com Spring Security + JWT
+* Controle de usuários e permissões
+* Dockerização completa da aplicação
+* Pipeline CI/CD com GitHub Actions
+* Deploy em nuvem (Render, Railway ou AWS)
+* Documentação da API com Swagger/OpenAPI
+* Dashboard com métricas de produtividade
