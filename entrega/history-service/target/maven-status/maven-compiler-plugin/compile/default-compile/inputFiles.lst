@@ -1,0 +1,11 @@
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\model\TaskHistory.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\repository\TaskHistoryRepository.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\model\TaskAction.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\exception\HistoricoNaoEncontradoException.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\dto\TaskStatsResponse.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\exception\GlobalExceptionHandler.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\dto\TaskHistoryResponse.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\controller\TaskHistoryController.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\HistoryServiceApplication.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\service\TaskHistoryService.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\history-service\src\main\java\com\lucas\history\dto\TaskHistoryRequest.java

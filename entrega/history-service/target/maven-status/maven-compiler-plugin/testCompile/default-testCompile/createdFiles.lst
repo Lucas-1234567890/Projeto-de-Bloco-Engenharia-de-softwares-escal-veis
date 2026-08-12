@@ -1,0 +1,3 @@
+com\lucas\history\repository\TaskHistoryRepositoryTest.class
+com\lucas\history\controller\TaskHistoryControllerTest.class
+com\lucas\history\service\TaskHistoryServiceTest.class

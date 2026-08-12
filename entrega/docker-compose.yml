@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: todo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tododb
+      POSTGRES_USER: todo
+      POSTGRES_PASSWORD: todo
+    ports:
+      - "5432:5432"
+    volumes:
+      - todo_pg_data:/var/lib/postgresql/data
+
+  # Banco próprio do history-service (database-per-service): cada microsserviço
+  # tem seu schema isolado, sem acesso direto de um serviço ao banco do outro.
+  history-db:
+    image: postgres:16-alpine
+    container_name: history-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: historydb
+      POSTGRES_USER: history
+      POSTGRES_PASSWORD: history
+    ports:
+      - "5433:5432"
+    volumes:
+      - history_pg_data:/var/lib/postgresql/data
+
+volumes:
+  todo_pg_data:
+  history_pg_data:

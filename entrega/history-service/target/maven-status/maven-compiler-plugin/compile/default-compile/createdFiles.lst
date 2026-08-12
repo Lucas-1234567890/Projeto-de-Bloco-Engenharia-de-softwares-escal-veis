@@ -1,0 +1,11 @@
+com\lucas\history\exception\HistoricoNaoEncontradoException.class
+com\lucas\history\HistoryServiceApplication.class
+com\lucas\history\dto\TaskHistoryResponse.class
+com\lucas\history\controller\TaskHistoryController.class
+com\lucas\history\dto\TaskHistoryRequest.class
+com\lucas\history\dto\TaskStatsResponse.class
+com\lucas\history\exception\GlobalExceptionHandler.class
+com\lucas\history\repository\TaskHistoryRepository.class
+com\lucas\history\model\TaskHistory.class
+com\lucas\history\service\TaskHistoryService.class
+com\lucas\history\model\TaskAction.class

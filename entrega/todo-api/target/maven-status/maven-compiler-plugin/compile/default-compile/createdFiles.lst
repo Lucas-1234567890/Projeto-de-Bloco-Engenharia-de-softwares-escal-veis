@@ -1,0 +1,12 @@
+com\lucas\todo\client\dto\TaskStatsResponse.class
+com\lucas\todo\exception\GlobalExceptionHandler.class
+com\lucas\todo\model\TaskAction.class
+com\lucas\todo\client\HistoryClient.class
+com\lucas\todo\repository\TaskRepository.class
+com\lucas\todo\model\Task.class
+com\lucas\todo\service\TaskService.class
+com\lucas\todo\TodoApplication.class
+com\lucas\todo\client\dto\TaskHistoryRequest.class
+com\lucas\todo\exception\TaskNotFoundException.class
+com\lucas\todo\client\dto\TaskHistoryResponse.class
+com\lucas\todo\controller\TaskController.class

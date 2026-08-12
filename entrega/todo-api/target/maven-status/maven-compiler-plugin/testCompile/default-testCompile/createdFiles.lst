@@ -1,0 +1,3 @@
+com\lucas\todo\repository\TaskRepositoryTest.class
+com\lucas\todo\service\TaskServiceTest.class
+com\lucas\todo\controller\TaskControllerTest.class

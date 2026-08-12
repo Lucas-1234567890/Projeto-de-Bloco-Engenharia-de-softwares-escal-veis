@@ -1,0 +1,12 @@
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\exception\GlobalExceptionHandler.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\model\Task.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\model\TaskAction.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\client\dto\TaskHistoryResponse.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\client\HistoryClient.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\exception\TaskNotFoundException.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\TodoApplication.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\client\dto\TaskHistoryRequest.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\controller\TaskController.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\service\TaskService.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\client\dto\TaskStatsResponse.java
+C:\Users\lucas\Downloads\entrega_microsservico\entrega\todo-api\src\main\java\com\lucas\todo\repository\TaskRepository.java
