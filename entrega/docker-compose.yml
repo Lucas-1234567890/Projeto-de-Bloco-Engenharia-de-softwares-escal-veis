@@ -28,6 +28,21 @@ services:
     volumes:
       - history_pg_data:/var/lib/postgresql/data
 
+  # TP4: message broker. AMQP na 5672; painel de gerenciamento em http://localhost:15672
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: todo-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: todo
+      RABBITMQ_DEFAULT_PASS: todo
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
 volumes:
+  rabbitmq_data:
   todo_pg_data:
   history_pg_data:

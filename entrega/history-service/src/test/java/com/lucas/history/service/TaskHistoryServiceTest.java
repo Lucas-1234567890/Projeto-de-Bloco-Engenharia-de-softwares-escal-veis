@@ -1,8 +1,8 @@
 package com.lucas.history.service;
 
-import com.lucas.history.dto.TaskHistoryRequest;
 import com.lucas.history.dto.TaskStatsResponse;
 import com.lucas.history.exception.HistoricoNaoEncontradoException;
+import com.lucas.history.messaging.TaskEventMessage;
 import com.lucas.history.model.TaskAction;
 import com.lucas.history.model.TaskHistory;
 import com.lucas.history.repository.TaskHistoryRepository;
@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,28 +45,69 @@ class TaskHistoryServiceTest {
         return h;
     }
 
+    private TaskEventMessage mensagem(UUID eventId, String tipo, LocalDateTime occurredAt) {
+        return new TaskEventMessage(eventId, tipo, 1L, "Nova tarefa", "desc", false, occurredAt);
+    }
+
     @Test
-    void registrarDeveSalvarComActionConvertidaDeString() {
-        TaskHistoryRequest request = new TaskHistoryRequest();
-        request.setTaskId(1L);
-        request.setAction("CREATED");
-        request.setTituloSnapshot("Nova tarefa");
-        request.setCompletedSnapshot(false);
+    void registrarDeveSalvarEventoComActionConvertidaDeString() {
+        UUID eventId = UUID.randomUUID();
+        when(repository.existsByEventId(eventId)).thenReturn(false);
 
-        when(repository.save(any(TaskHistory.class))).thenAnswer(inv -> {
-            TaskHistory h = inv.getArgument(0);
-            h.setId(100L);
-            return h;
-        });
+        boolean gravou = service.registrar(mensagem(eventId, "CREATED", LocalDateTime.of(2026, 9, 20, 10, 0)));
 
-        var resultado = service.registrar(request);
+        assertThat(gravou).isTrue();
+        ArgumentCaptor<TaskHistory> captor = ArgumentCaptor.forClass(TaskHistory.class);
+        verify(repository).save(captor.capture());
+        TaskHistory salvo = captor.getValue();
+        assertThat(salvo.getEventId()).isEqualTo(eventId);
+        assertThat(salvo.getTaskId()).isEqualTo(1L);
+        assertThat(salvo.getAction()).isEqualTo(TaskAction.CREATED);
+        assertThat(salvo.getTituloSnapshot()).isEqualTo("Nova tarefa");
+    }
 
-        assertThat(resultado.getId()).isEqualTo(100L);
-        assertThat(resultado.getAction()).isEqualTo("CREATED");
+    @Test
+    void registrarDeveUsarOMomentoEmQueOEventoOcorreuEnaoOdeChegada() {
+        UUID eventId = UUID.randomUUID();
+        LocalDateTime ocorridoHaMuitoTempo = LocalDateTime.of(2026, 1, 1, 8, 0);
+        when(repository.existsByEventId(eventId)).thenReturn(false);
+
+        service.registrar(mensagem(eventId, "COMPLETED", ocorridoHaMuitoTempo));
 
         ArgumentCaptor<TaskHistory> captor = ArgumentCaptor.forClass(TaskHistory.class);
         verify(repository).save(captor.capture());
-        assertThat(captor.getValue().getAction()).isEqualTo(TaskAction.CREATED);
+        assertThat(captor.getValue().getChangedAt()).isEqualTo(ocorridoHaMuitoTempo);
+    }
+
+    @Test
+    void registrarDeveIgnorarEventoDuplicado() {
+        UUID eventId = UUID.randomUUID();
+        when(repository.existsByEventId(eventId)).thenReturn(true);
+
+        boolean gravou = service.registrar(mensagem(eventId, "CREATED", LocalDateTime.now()));
+
+        assertThat(gravou).isFalse();
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void registrarDeveRejeitarTipoDeEventoDesconhecido() {
+        // Vira "poison message": após os retries, o RabbitMQ a envia para a DLQ.
+        UUID eventId = UUID.randomUUID();
+        when(repository.existsByEventId(eventId)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.registrar(mensagem(eventId, "EXPLODED", LocalDateTime.now())))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void registrarDeveRejeitarEventoSemEventId() {
+        assertThatThrownBy(() -> service.registrar(mensagem(null, "CREATED", LocalDateTime.now())))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verifyNoInteractions(repository);
     }
 
     @Test

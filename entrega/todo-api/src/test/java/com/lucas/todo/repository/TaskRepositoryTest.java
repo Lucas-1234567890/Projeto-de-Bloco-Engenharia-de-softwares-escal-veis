@@ -1,15 +1,18 @@
 package com.lucas.todo.repository;
 
+import com.lucas.todo.config.JpaAuditingConfig;
 import com.lucas.todo.model.Task;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@Import(JpaAuditingConfig.class)
 class TaskRepositoryTest {
 
     @Autowired
