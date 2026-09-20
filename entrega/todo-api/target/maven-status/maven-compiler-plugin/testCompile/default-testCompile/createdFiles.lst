@@ -1,3 +1,5 @@
+com\lucas\todo\messaging\TaskEventPublisherTest.class
 com\lucas\todo\repository\TaskRepositoryTest.class
+com\lucas\todo\messaging\TaskEventMessageContractTest.class
 com\lucas\todo\service\TaskServiceTest.class
 com\lucas\todo\controller\TaskControllerTest.class
