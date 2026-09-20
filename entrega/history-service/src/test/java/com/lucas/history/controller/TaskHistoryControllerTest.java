@@ -1,7 +1,5 @@
 package com.lucas.history.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lucas.history.dto.TaskHistoryRequest;
 import com.lucas.history.dto.TaskHistoryResponse;
 import com.lucas.history.dto.TaskStatsResponse;
 import com.lucas.history.exception.HistoricoNaoEncontradoException;
@@ -14,8 +12,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -26,43 +22,8 @@ class TaskHistoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockBean
     private TaskHistoryService service;
-
-    @Test
-    void deveRegistrarEventoERetornar201() throws Exception {
-        TaskHistoryResponse resposta = new TaskHistoryResponse();
-        resposta.setId(1L);
-        resposta.setTaskId(5L);
-        resposta.setAction("CREATED");
-        when(service.registrar(any())).thenReturn(resposta);
-
-        TaskHistoryRequest request = new TaskHistoryRequest();
-        request.setTaskId(5L);
-        request.setAction("CREATED");
-        request.setTituloSnapshot("Tarefa");
-
-        mockMvc.perform(post("/api/history")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.taskId").value(5))
-                .andExpect(jsonPath("$.action").value("CREATED"));
-    }
-
-    @Test
-    void deveRetornar400QuandoTaskIdAusente() throws Exception {
-        TaskHistoryRequest request = new TaskHistoryRequest();
-        request.setAction("CREATED");
-
-        mockMvc.perform(post("/api/history")
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
 
     @Test
     void deveListarHistoricoDaTask() throws Exception {

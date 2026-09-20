@@ -1,9 +1,9 @@
 package com.lucas.todo.service;
 
 import com.lucas.todo.client.HistoryClient;
-import com.lucas.todo.client.dto.TaskHistoryRequest;
 import com.lucas.todo.client.dto.TaskHistoryResponse;
 import com.lucas.todo.exception.TaskNotFoundException;
+import com.lucas.todo.messaging.TaskEventMessage;
 import com.lucas.todo.model.Task;
 import com.lucas.todo.repository.TaskRepository;
 import feign.FeignException;
@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,15 +31,24 @@ class TaskServiceTest {
     @Mock
     private HistoryClient historyClient;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private TaskService service;
 
     @BeforeEach
     void setUp() {
-        service = new TaskService(repository, historyClient);
+        service = new TaskService(repository, historyClient, eventPublisher);
+    }
+
+    private TaskEventMessage eventoPublicado() {
+        ArgumentCaptor<TaskEventMessage> captor = ArgumentCaptor.forClass(TaskEventMessage.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        return captor.getValue();
     }
 
     @Test
-    void criarDeveSalvarTaskERegistrarEventoNoHistoryService() {
+    void criarDeveSalvarTaskEPublicarEventoCreated() {
         Task task = new Task("Nova tarefa", "descrição");
         task.setId(1L);
         when(repository.save(any(Task.class))).thenReturn(task);
@@ -47,14 +57,45 @@ class TaskServiceTest {
 
         assertThat(resultado.getId()).isEqualTo(1L);
 
-        ArgumentCaptor<TaskHistoryRequest> captor = ArgumentCaptor.forClass(TaskHistoryRequest.class);
-        verify(historyClient).registrarEvento(captor.capture());
-        assertThat(captor.getValue().getAction()).isEqualTo("CREATED");
-        assertThat(captor.getValue().getTaskId()).isEqualTo(1L);
+        TaskEventMessage evento = eventoPublicado();
+        assertThat(evento.eventType()).isEqualTo("CREATED");
+        assertThat(evento.taskId()).isEqualTo(1L);
+        assertThat(evento.titulo()).isEqualTo("Nova tarefa");
+        assertThat(evento.eventId()).isNotNull();
+        assertThat(evento.occurredAt()).isNotNull();
     }
 
     @Test
-    void concluirDeveMarcarCompletedERegistrarEventoDeConclusao() {
+    void criarNaoDeveChamarHistoryServiceDeFormaSincrona() {
+        // TP4: a escrita do histórico virou evento assíncrono. O todo-api não
+        // pode mais depender de uma chamada REST ao history-service para gravar.
+        Task task = new Task("Nova tarefa", "descrição");
+        task.setId(1L);
+        when(repository.save(any(Task.class))).thenReturn(task);
+
+        service.criar(task);
+
+        verifyNoInteractions(historyClient);
+    }
+
+    @Test
+    void atualizarDevePublicarEventoUpdated() {
+        Task existente = new Task("Antigo", "desc antiga");
+        existente.setId(3L);
+        when(repository.findById(3L)).thenReturn(Optional.of(existente));
+        when(repository.save(any(Task.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Task resultado = service.atualizar(3L, new Task("Novo título", "nova desc"));
+
+        assertThat(resultado.getTitulo()).isEqualTo("Novo título");
+
+        TaskEventMessage evento = eventoPublicado();
+        assertThat(evento.eventType()).isEqualTo("UPDATED");
+        assertThat(evento.titulo()).isEqualTo("Novo título");
+    }
+
+    @Test
+    void concluirDeveMarcarCompletedEPublicarEventoCompleted() {
         Task existente = new Task("Tarefa", null);
         existente.setId(5L);
         when(repository.findById(5L)).thenReturn(Optional.of(existente));
@@ -64,10 +105,34 @@ class TaskServiceTest {
 
         assertThat(resultado.isCompleted()).isTrue();
 
-        ArgumentCaptor<TaskHistoryRequest> captor = ArgumentCaptor.forClass(TaskHistoryRequest.class);
-        verify(historyClient).registrarEvento(captor.capture());
-        assertThat(captor.getValue().getAction()).isEqualTo("COMPLETED");
-        assertThat(captor.getValue().getCompletedSnapshot()).isTrue();
+        TaskEventMessage evento = eventoPublicado();
+        assertThat(evento.eventType()).isEqualTo("COMPLETED");
+        assertThat(evento.completed()).isTrue();
+    }
+
+    @Test
+    void deletarDevePublicarEventoDeletedComSnapshotEApagar() {
+        Task existente = new Task("Tarefa a apagar", null);
+        existente.setId(7L);
+        when(repository.findById(7L)).thenReturn(Optional.of(existente));
+
+        service.deletar(7L);
+
+        TaskEventMessage evento = eventoPublicado();
+        assertThat(evento.eventType()).isEqualTo("DELETED");
+        assertThat(evento.taskId()).isEqualTo(7L);
+        assertThat(evento.titulo()).isEqualTo("Tarefa a apagar");
+        verify(repository).delete(existente);
+    }
+
+    @Test
+    void atualizarNaoDevePublicarEventoQuandoTaskNaoExiste() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.atualizar(99L, new Task("x", null)))
+                .isInstanceOf(TaskNotFoundException.class);
+
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -76,35 +141,6 @@ class TaskServiceTest {
 
         assertThatThrownBy(() -> service.buscarPorId(99L))
                 .isInstanceOf(TaskNotFoundException.class);
-    }
-
-    @Test
-    void deletarDeveRegistrarEventoAntesDeApagar() {
-        Task existente = new Task("Tarefa a apagar", null);
-        existente.setId(7L);
-        when(repository.findById(7L)).thenReturn(Optional.of(existente));
-
-        service.deletar(7L);
-
-        ArgumentCaptor<TaskHistoryRequest> captor = ArgumentCaptor.forClass(TaskHistoryRequest.class);
-        verify(historyClient).registrarEvento(captor.capture());
-        assertThat(captor.getValue().getAction()).isEqualTo("DELETED");
-        verify(repository).delete(existente);
-    }
-
-    @Test
-    void criarNaoDeveFalharQuandoHistoryServiceIndisponivel() {
-        // Histórico é auditoria auxiliar: indisponibilidade do microsserviço
-        // não pode impedir a criação da task.
-        Task task = new Task("Nova tarefa", "descrição");
-        task.setId(1L);
-        when(repository.save(any(Task.class))).thenReturn(task);
-        when(historyClient.registrarEvento(any())).thenThrow(mock(FeignException.class));
-
-        Task resultado = service.criar(task);
-
-        assertThat(resultado.getId()).isEqualTo(1L);
-        verify(historyClient).registrarEvento(any());
     }
 
     @Test

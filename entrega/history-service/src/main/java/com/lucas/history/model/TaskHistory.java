@@ -3,6 +3,7 @@ package com.lucas.history.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Snapshot imutável do estado de uma Task no momento de um evento.
@@ -21,6 +22,13 @@ public class TaskHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /**
+     * Identificador do evento que originou esta linha (idempotência do consumidor).
+     * Nulo apenas nas linhas antigas, gravadas antes do TP4 pela API REST síncrona.
+     */
+    @Column(name = "event_id", unique = true)
+    private UUID eventId;
 
     @Column(name = "task_id", nullable = false)
     private Long taskId;
@@ -46,6 +54,9 @@ public class TaskHistory {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public UUID getEventId() { return eventId; }
+    public void setEventId(UUID eventId) { this.eventId = eventId; }
 
     public Long getTaskId() { return taskId; }
     public void setTaskId(Long taskId) { this.taskId = taskId; }

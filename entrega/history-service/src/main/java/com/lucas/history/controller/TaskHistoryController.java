@@ -1,15 +1,17 @@
 package com.lucas.history.controller;
 
-import com.lucas.history.dto.TaskHistoryRequest;
 import com.lucas.history.dto.TaskHistoryResponse;
 import com.lucas.history.dto.TaskStatsResponse;
 import com.lucas.history.service.TaskHistoryService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * TP4: este controller expõe apenas CONSULTAS. A escrita do histórico deixou de ser
+ * um POST síncrono do todo-api — agora chega como evento via RabbitMQ (ver
+ * {@code messaging/TaskEventListener}).
+ */
 @RestController
 @RequestMapping("/api/history")
 public class TaskHistoryController {
@@ -18,13 +20,6 @@ public class TaskHistoryController {
 
     public TaskHistoryController(TaskHistoryService service) {
         this.service = service;
-    }
-
-    /** Chamado pelo todo-api toda vez que uma task é criada/atualizada/concluída/deletada. */
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TaskHistoryResponse registrar(@Valid @RequestBody TaskHistoryRequest request) {
-        return service.registrar(request);
     }
 
     @GetMapping("/task/{taskId}")

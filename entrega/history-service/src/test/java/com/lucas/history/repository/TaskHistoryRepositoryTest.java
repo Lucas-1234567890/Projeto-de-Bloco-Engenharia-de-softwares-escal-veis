@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,5 +66,26 @@ class TaskHistoryRepositoryTest {
         List<TaskHistory> resultado = repository.findByTaskIdOrderByChangedAtDesc(999L);
 
         assertThat(resultado).isEmpty();
+    }
+
+    @Test
+    void existsByEventIdDeveDistinguirEventoJaRegistrado() {
+        UUID eventId = UUID.randomUUID();
+        TaskHistory h = evento(30L, TaskAction.CREATED, LocalDateTime.now());
+        h.setEventId(eventId);
+        repository.save(h);
+
+        assertThat(repository.existsByEventId(eventId)).isTrue();
+        assertThat(repository.existsByEventId(UUID.randomUUID())).isFalse();
+    }
+
+    @Test
+    void deveAceitarVariasLinhasSemEventIdPorCausaDosRegistrosAntigos() {
+        // Linhas gravadas antes do TP4 não têm event_id; o índice único não pode barrá-las.
+        repository.saveAndFlush(evento(40L, TaskAction.CREATED, LocalDateTime.now()));
+        repository.saveAndFlush(evento(41L, TaskAction.CREATED, LocalDateTime.now()));
+
+        assertThat(repository.findByTaskIdOrderByChangedAtDesc(40L)).hasSize(1);
+        assertThat(repository.findByTaskIdOrderByChangedAtDesc(41L)).hasSize(1);
     }
 }
